@@ -1,0 +1,1194 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Room Booking System API",
+        "version": "1.0.0",
+        "description": "API documentation for Room Booking System (Google Calendar synchronization, room management, user administration, and room display monitors)."
+    },
+    "paths": {
+        "/api/v1/account/google/google-callback": {
+            "post": {
+                "operationId": "v1_account_google_google_callback_create",
+                "description": "Exchanges the Google OAuth2 `authentication_code` for access and refresh tokens, fetches user profile details from Google People API, updates an existing user in the database, and sets the `access_token` cookie (valid for 7 days).",
+                "summary": "Complete Google OAuth2 authentication",
+                "tags": [
+                    "Authentication"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GoogleAuthCallbackRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GoogleAuthCallbackRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GoogleAuthCallbackRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "jwtAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GoogleAuthCallbackResponse"
+                                }
+                            }
+                        },
+                        "description": "User authenticated successfully; sets `access_token` cookie."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "GoogleAuthError": {
+                                        "value": "Error occurred with google authentication",
+                                        "summary": "Google Auth Error"
+                                    },
+                                    "UserNotFound": {
+                                        "value": "user is not in list",
+                                        "summary": "User Not Found"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Google authentication error or user email is not registered in the system."
+                    }
+                }
+            }
+        },
+        "/api/v1/account/google/refresh-token": {
+            "post": {
+                "operationId": "v1_account_google_refresh_token_create",
+                "description": "Uses the current user credentials associated with the `access_token` cookie to request a new access token from Google OAuth2 token endpoint and updates the cookie.",
+                "summary": "Refresh Google OAuth2 access token",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Current access token stored in cookies.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Success": {
+                                        "value": "token was refreshed"
+                                    },
+                                    "InvalidToken": {
+                                        "value": "error",
+                                        "summary": "Invalid Token"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Token refreshed successfully or error details returned with HTTP 200."
+                    }
+                }
+            }
+        },
+        "/api/v1/account/login": {
+            "get": {
+                "operationId": "v1_account_login_retrieve",
+                "description": "Checks the `access_token` cookie and returns the public profile data of the logged-in user, or `\"User is not logged in\"` (with HTTP 200) if no valid session exists.",
+                "summary": "Get current authenticated user session",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Access token stored in cookies."
+                    }
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PublicUserData"
+                                }
+                            }
+                        },
+                        "description": "Returns public user JSON object if logged in, or `\"User is not logged in\"` string."
+                    }
+                }
+            }
+        },
+        "/api/v1/account/logout": {
+            "post": {
+                "operationId": "v1_account_logout_create",
+                "description": "Revokes the user's Google `refresh_token` and `access_token` via Google OAuth2 revoke endpoint, clears stored tokens in the database, and deletes the `access_token` cookie.",
+                "summary": "Log out current user and revoke Google tokens",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Active access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Success": {
+                                        "value": "Credentials successfully revoked."
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Credentials revoked and cookie deleted."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Error": {
+                                        "value": "An error occurred."
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Error occurred while revoking tokens."
+                    }
+                }
+            }
+        },
+        "/api/v1/create-user": {
+            "post": {
+                "operationId": "v1_create_user_create",
+                "description": "Creates a new user from the `chosenUser` object payload. Requires admin privileges.",
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Admin user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Users (Admin)"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddUserRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddUserRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Created": {
+                                        "value": "user was successfully created"
+                                    },
+                                    "Failed": {
+                                        "value": "user wasnt successfully created"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Result message string."
+                    },
+                    "403": {
+                        "description": "Not authorized as admin."
+                    }
+                }
+            }
+        },
+        "/api/v1/delete-user": {
+            "post": {
+                "operationId": "v1_delete_user_create",
+                "description": "Deletes a user matching the provided fields (after stripping `key`). Requires admin privileges.",
+                "summary": "Delete a user",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Admin user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Users (Admin)"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteUserRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteUserRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Deleted": {
+                                        "value": "user was successfully deleted"
+                                    },
+                                    "Failed": {
+                                        "value": "user wasnt successfully deleted"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Result message string."
+                    },
+                    "403": {
+                        "description": "Not authorized as admin."
+                    }
+                }
+            }
+        },
+        "/api/v1/event-list": {
+            "get": {
+                "operationId": "v1_event_list_list",
+                "description": "Returns events between `start` and `end` ISO timestamps ordered by `start`. Admin users receive all events; non-admin users receive only events where `teacher` matches their email.",
+                "summary": "List calendar events in date range",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Authenticated user access token cookie.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "end",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "End of date range in ISO 8601 format (e.g. `2025-05-31T23:59:59.000Z`).",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "room",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Optional room parameter passed by frontend home page."
+                    },
+                    {
+                        "in": "query",
+                        "name": "start",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "Start of date range in ISO 8601 format (e.g. `2025-05-01T00:00:00.000Z`).",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EventDataList"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "JSON array of formatted event objects."
+                    },
+                    "403": {
+                        "description": "Not authenticated."
+                    }
+                }
+            }
+        },
+        "/api/v1/modify-event": {
+            "post": {
+                "operationId": "v1_modify_event_create",
+                "description": "Updates the `room` number for the specified event `id`.",
+                "summary": "Assign or change event room",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Authenticated user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyEventRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyEventRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyEventRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Modified": {
+                                        "value": "Event was successfully modified"
+                                    },
+                                    "NotModified": {
+                                        "value": "Event wasnt modified",
+                                        "summary": "Not Modified"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Result message string."
+                    },
+                    "403": {
+                        "description": "Not authenticated."
+                    }
+                }
+            }
+        },
+        "/api/v1/modify-user": {
+            "post": {
+                "operationId": "v1_modify_user_create",
+                "description": "Updates a user's `email`, `username`, and `is_admin` status (lookup by `id` if provided, otherwise by `email`). Requires admin privileges.",
+                "summary": "Modify existing user",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Admin user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Users (Admin)"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyUserRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyUserRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PublicUserData"
+                                }
+                            }
+                        },
+                        "description": "Updated user data JSON object, or `\"User wasnt modified\"` string on failure."
+                    },
+                    "403": {
+                        "description": "Not authorized as admin."
+                    }
+                }
+            }
+        },
+        "/api/v1/monitor": {
+            "get": {
+                "operationId": "v1_monitor_retrieve",
+                "description": "Returns the current/upcoming event and next free time window for a specific `room` today. Requires valid monitor `password` query parameter.",
+                "summary": "Get current event and free time for a room monitor",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "password",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Monitor access password.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "room",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Room number (0 for meeting room, 1-7 for classrooms).",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Monitors"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MonitorResponse"
+                                }
+                            }
+                        },
+                        "description": "Current/upcoming event and next free time interval."
+                    },
+                    "204": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "No events scheduled for this room today."
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "Missing or invalid monitor password (`\"Not authorized\"`)."
+                    }
+                }
+            }
+        },
+        "/api/v1/monitor/big": {
+            "get": {
+                "operationId": "v1_monitor_big_list",
+                "description": "Returns all room bookings for today split into `morning` (start <= 11:59) and `afternoon` (start > 11:59) lists, formatted and sorted across room slots 1..9.",
+                "summary": "Get daily schedule for big overview monitor",
+                "tags": [
+                    "Monitors"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BigMonitorResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Morning and afternoon room schedule arrays."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "Error message (`\"Something went wrong\"`)."
+                    }
+                }
+            }
+        },
+        "/api/v1/refresh-events": {
+            "post": {
+                "operationId": "v1_refresh_events_create",
+                "description": "Fetches events for all registered teachers from Google Calendar API (from 2 days ago to 30 days ahead) using the service account, creates or updates events in the local database, and deletes local events that were removed from Google Calendar.",
+                "summary": "Synchronize events from Google Calendar",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Authenticated user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "Success": {
+                                        "value": "Everything was successfully refreshed"
+                                    },
+                                    "PartialFailure": {
+                                        "value": "Everything was'nt successfully refreshed",
+                                        "summary": "Partial Failure"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Synchronization status message."
+                    },
+                    "403": {
+                        "description": "Not authenticated."
+                    }
+                }
+            }
+        },
+        "/api/v1/user-list": {
+            "get": {
+                "operationId": "v1_user_list_list",
+                "description": "Returns a list of all users ordered by `date_joined` with a 1-based `key` field. Requires admin privileges.",
+                "summary": "List all users",
+                "parameters": [
+                    {
+                        "in": "cookie",
+                        "name": "access_token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Admin user access token cookie.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Users (Admin)"
+                ],
+                "security": [
+                    {
+                        "jwtAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserListItem"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "JSON array of public user objects with `key`."
+                    },
+                    "403": {
+                        "description": "Not authorized as admin."
+                    }
+                }
+            }
+        },
+        "/api/v1/account/google/login": {
+            "get": {
+                "operationId": "google_auth_init",
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Initiate Google OAuth2 login redirect",
+                "description": "Redirects the browser (HTTP 302) to the Google OAuth2 consent screen to initiate user login.",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google OAuth2 authorization URL."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AddUserRequest": {
+                "type": "object",
+                "properties": {
+                    "chosenUser": {
+                        "$ref": "#/components/schemas/ChosenUserPayload"
+                    }
+                },
+                "required": [
+                    "chosenUser"
+                ]
+            },
+            "BigMonitorResponse": {
+                "type": "object",
+                "properties": {
+                    "afternoon": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BigMonitorSlot"
+                        },
+                        "title": "Morning"
+                    }
+                },
+                "required": [
+                    "afternoon"
+                ]
+            },
+            "BigMonitorSlot": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Event ID or null if room is empty."
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "start": {
+                        "type": "string"
+                    },
+                    "end": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "room": {
+                        "type": "integer",
+                        "description": "Room slot number (1-9)."
+                    },
+                    "teacher": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "textColor": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "room"
+                ]
+            },
+            "ChosenUserPayload": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "is_admin": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "key": {
+                        "type": "integer",
+                        "description": "Temporary row key stripped before user creation."
+                    }
+                },
+                "required": [
+                    "email",
+                    "key",
+                    "username"
+                ]
+            },
+            "DeleteUserRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "is_admin": {
+                        "type": "boolean"
+                    },
+                    "key": {
+                        "type": "string",
+                        "description": "Row key stripped before lookup."
+                    }
+                },
+                "required": [
+                    "email",
+                    "key"
+                ]
+            },
+            "EventData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "description": "Event start datetime as string."
+                    },
+                    "end": {
+                        "type": "string",
+                        "description": "Event end datetime as string."
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "room": {
+                        "type": "integer",
+                        "description": "Assigned room number (-1 if unassigned, 0 for meeting room, 1-7 for rooms)."
+                    },
+                    "teacher": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "description": "Teacher email address."
+                    },
+                    "color": {
+                        "type": "string",
+                        "description": "Calendar badge background color derived from room."
+                    },
+                    "textColor": {
+                        "type": "string",
+                        "description": "Calendar badge text color derived from room."
+                    }
+                },
+                "required": [
+                    "color",
+                    "description",
+                    "end",
+                    "id",
+                    "room",
+                    "start",
+                    "teacher",
+                    "textColor",
+                    "title"
+                ]
+            },
+            "EventDataList": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "description": "Event start datetime as string."
+                    },
+                    "end": {
+                        "type": "string",
+                        "description": "Event end datetime as string."
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "room": {
+                        "type": "integer",
+                        "description": "Assigned room number (-1 if unassigned, 0 for meeting room, 1-7 for rooms)."
+                    },
+                    "teacher": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "description": "Teacher email address."
+                    },
+                    "color": {
+                        "type": "string",
+                        "description": "Calendar badge background color derived from room."
+                    },
+                    "textColor": {
+                        "type": "string",
+                        "description": "Calendar badge text color derived from room."
+                    }
+                },
+                "required": [
+                    "color",
+                    "description",
+                    "end",
+                    "id",
+                    "room",
+                    "start",
+                    "teacher",
+                    "textColor",
+                    "title"
+                ]
+            },
+            "FreeTimePeriod": {
+                "type": "object",
+                "properties": {
+                    "free_time_start": {
+                        "type": "string",
+                        "description": "ISO datetime when free time starts."
+                    },
+                    "free_time_end": {
+                        "type": "string",
+                        "description": "ISO datetime when free time ends."
+                    }
+                },
+                "required": [
+                    "free_time_end",
+                    "free_time_start"
+                ]
+            },
+            "GoogleAuthCallbackRequest": {
+                "type": "object",
+                "properties": {
+                    "authentication_code": {
+                        "type": "string",
+                        "description": "Authorization code returned by Google OAuth2 callback."
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "OAuth2 state parameter."
+                    }
+                },
+                "required": [
+                    "authentication_code"
+                ]
+            },
+            "GoogleAuthCallbackResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Google profile resource ID."
+                    },
+                    "username": {
+                        "type": "string",
+                        "description": "Display name from Google profile."
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "User email address."
+                    }
+                },
+                "required": [
+                    "email",
+                    "id",
+                    "username"
+                ]
+            },
+            "ModifyEventRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique event ID."
+                    },
+                    "room": {
+                        "type": "integer",
+                        "description": "New room number to assign to the event."
+                    }
+                },
+                "required": [
+                    "id",
+                    "room"
+                ]
+            },
+            "ModifyUserRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "is_admin": {
+                        "type": "boolean"
+                    },
+                    "key": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "is_admin",
+                    "username"
+                ]
+            },
+            "MonitorResponse": {
+                "type": "object",
+                "properties": {
+                    "event": {
+                        "$ref": "#/components/schemas/EventData"
+                    },
+                    "free_time": {
+                        "$ref": "#/components/schemas/FreeTimePeriod"
+                    }
+                },
+                "required": [
+                    "event",
+                    "free_time"
+                ]
+            },
+            "PublicUserData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "is_admin": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "email",
+                    "id",
+                    "is_admin",
+                    "username"
+                ]
+            },
+            "UserListItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "is_admin": {
+                        "type": "boolean"
+                    },
+                    "key": {
+                        "type": "string",
+                        "description": "1-based string index for frontend table row key."
+                    }
+                },
+                "required": [
+                    "email",
+                    "id",
+                    "is_admin",
+                    "key",
+                    "username"
+                ]
+            }
+        },
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}

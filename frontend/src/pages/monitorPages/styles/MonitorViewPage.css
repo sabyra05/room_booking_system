@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@font-face {
+    font-family: 'TGSPerfectCondensed';
+    src: local('TGSPerfectCondensed'), url(../media/TGSPerfectCondensed.otf) format('opentype');
+}
+
+.main {
+    font-family: 'Montserrat', sans-serif;
+    display: flex;
+    justify-content: space-around;
+}
+
+.left-panel {
+    flex: 2;
+    margin-top: 120px;
+    position: relative;
+    max-width: 850px;
+}
+
+.weather-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.weather-icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+.temperature {
+    display: flex;
+    align-items: center;
+
+}
+
+.temp-value {
+    font-size: 4rem;
+    font-weight: 300;
+    margin-right: 10px;
+}
+
+.location {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.4rem;
+}
+
+.temp-range {
+    font-size: 1.4rem;
+    opacity: 0.8;
+}
+
+.date-time {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 2rem;
+    border-bottom: 5px solid #f4052e;
+    padding-bottom: 15px;
+}
+
+.separator {
+    margin: 0 10px;
+    opacity: 0.8;
+}
+
+.not-available {
+    color: #f4052e;
+    font-weight: 700;
+}
+
+.schedule-item {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.schedule-item::after {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 100%;
+    background-color: #8cc63f;
+    margin-top: 20px;
+}
+
+.schedule-item.current {
+    display: flex;
+    flex-direction: column;
+}
+
+.class-name {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.meta-info {
+    margin-top: auto;
+}
+
+.class-name {
+    font-size: 4rem;
+    font-weight: 500;
+}
+
+.current .class-time {
+    color: #f4052e;
+    font-size: 5rem;
+    font-weight: 700;
+    max-height: 110px;
+}
+
+.available .class-time {
+    color: #75ba23;
+    font-size: 5rem;
+    font-weight: 900;
+    max-height: 110px;
+}
+
+.schedule-item.available::after {
+    display: none;
+    color: #75ba23;
+    background-color: #75ba23;
+}
+
+.teacher, .availability {
+    opacity: 0.8;
+    margin-bottom: 15px;
+    font-size: 1.9rem;
+}
+
+.availability {
+
+}
+
+.school-info {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    display: flex;
+    align-items: flex-start;
+    font-size: 1.2rem;
+    opacity: 0.8;
+    margin-bottom: 20px;
+}
+
+.logo {
+    margin-right: 15px;
+    max-width: 180px;
+    min-width: 180px;
+    min-height: 60px;
+}
+
+.contact-info, .contact-details {
+    margin-right: 20px;
+}
+
+.footer {
+    display: flex;
+}
+
+.vertical-separator {
+    border-left: 2px solid white;
+    height: 65px;
+    margin-right: 20px;
+    padding-bottom: 50px;
+
+}
+
+.right-panel {
+    transform: translateX(80px);
+    margin-top: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    /*height: 100vh;*/
+}
+
+.room-text-sign {
+    /*transform: scale(0.85, 1.45);*/
+    font-family: 'TGSPerfectCondensed', serif;
+    line-height: 80%;
+    font-size: 20vh;
+    background: linear-gradient(90deg,rgba(161, 161, 161, 1) 0%, rgba(138, 138, 138, 1) 51%, rgba(84, 84, 84, 1) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.room-number-sign {
+    line-height: 80%;
+    font-family: 'TGSPerfectCondensed', serif;
+    font-size: 55vh;
+    display: flex;
+}
+
+.meeting-sign {
+    margin-top: 135px;
+    line-height: 80%;
+    font-family: 'TGSPerfectCondensed', serif;
+    font-size: 20vh;
+    text-align: center;
+    display: flex;
+    letter-spacing: -10px;
+}
+
+.raum-sign {
+    transform: translateX(9px);
+    line-height: 80%;
+    font-family: 'TGSPerfectCondensed', serif;
+    letter-spacing: 12px;
+    font-size: 25vh;
+    background: linear-gradient(90deg,rgba(161, 161, 161, 1) 0%, rgba(138, 138, 138, 1) 51%, rgba(84, 84, 84, 1) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+

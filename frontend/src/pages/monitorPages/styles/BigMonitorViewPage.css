@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'Bornia-Regular';
+    src: local('Bornia-Regular'), url(../media/Bornia-Regular.ttf) format('opentype');
+}
+@font-face {
+    font-family: 'Bornia-Bold';
+    src: local('Bornia-Bold'), url(../media/Bornia-Bold.ttf) format('opentype');
+}
+
+.main h2 {
+    font-family: 'Bornia-Bold', serif;
+}

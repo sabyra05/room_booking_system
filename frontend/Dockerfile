@@ -21,6 +21,6 @@ FROM nginx:stable-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 5173
+EXPOSE 5180
 
 CMD ["nginx", "-g", "daemon off;"]

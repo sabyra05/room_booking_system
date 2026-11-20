@@ -74,11 +74,11 @@ docker compose up --build -d
 ```
 
 Services will be available at:
-- **Frontend (Nginx / React production build):** http://localhost:5173
-- **Backend API (Django / Gunicorn, `DEBUG=False`):** http://localhost:8000
-- **Swagger UI (OpenAPI documentation):** http://localhost:8000/api/docs/swagger/
-- **OpenAPI Schema:** http://localhost:8000/api/schema/
-- **PostgreSQL:** `localhost:5432` (persisted in Docker volume `postgres_data`)
+- **Frontend (Nginx / React production build):** http://localhost:5180
+- **Backend API (Django / Gunicorn, `DEBUG=False`):** http://localhost:8005
+- **Swagger UI (OpenAPI documentation):** http://localhost:8005/api/docs/swagger/
+- **OpenAPI Schema:** http://localhost:8005/api/schema/
+- **PostgreSQL:** `localhost:5455` (persisted in Docker volume `postgres_data`)
 
 ### 3. Database Migration from an Existing PostgreSQL Instance
 To migrate existing users (`user_user`) and events (`event_event`) from a host PostgreSQL database into the Docker PostgreSQL container:

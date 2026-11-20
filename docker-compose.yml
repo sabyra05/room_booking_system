@@ -30,7 +30,7 @@ services:
     environment:
       DB_HOST: db
     ports:
-      - "8000:8000"
+      - "8005:8005"
     depends_on:
       db:
         condition: service_healthy
@@ -45,7 +45,7 @@ services:
     container_name: rbs_frontend
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "5180:5180"
     depends_on:
       - backend
 
